@@ -119,7 +119,7 @@ bool Sorter::Sort(double fraction)
 void Sorter::FitResolution()
 {
     TF1 * tmpfunc = NULL;
-    if(fVerbose) std::cout << " ---> Fitting the detector resolution data w/:  a1 + a2*sqrt(E)" << std::endl;
+    //if(fVerbose) std::cout << " ---> Fitting the detector resolution data w/:  a1 + a2*sqrt(E)" << std::endl;
     for(int i=0; i<12; i++) {
         // access the information stored in the resolution_data directory
         // for the ith detector
@@ -135,7 +135,7 @@ void Sorter::FitResolution()
         // fit the resolution data stored in the TGraph and output fit
         // parameters
         fResGraph[i]->Fit(tmpfunc,"Q");
-        if(fVerbose) std::cout << " det" << i+1 << ": a1 = " << tmpfunc->GetParameter(0) << "\ta2 = " << tmpfunc->GetParameter(1) << std::endl;
+        //if(fVerbose) std::cout << " det" << i+1 << ": a1 = " << tmpfunc->GetParameter(0) << "\ta2 = " << tmpfunc->GetParameter(1) << std::endl;
 
         // save the temporary function in the res_fit pointer array
         fResFit[i] = tmpfunc;

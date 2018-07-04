@@ -5,7 +5,7 @@ class Analyzer
 {
   public:
     // Constructors and destructors
-    Analyzer(double radon, double k, double cosmic, int plate);
+    Analyzer(int plate, double radon=0., double k=0., double cosmic=0.);
     ~Analyzer();
 
     // Setters and getters
@@ -24,13 +24,20 @@ class Analyzer
     void SetCosmicMaxActivity(double cosmic) { fCosmicMaxActivity = cosmic; }
     double GetCosmicMaxActivity() { return fCosmicMaxActivity; }
 
+    void SetActivities(double radon, double k, double cosmic);
+    void SetMaxActivities(double radon, double k, double cosmic);
+
     Sorter * Get222RnSorter() { return f222RnSorter; }
     Sorter * Get40KSorter() { return f40KSorter; }
-    Sorter * GetCosmicSorter() { return fCosmicSorter; }
+    Sorter * GetCosmicSorter(int i) { return fCosmicSorter[i]; }
 
     void Sort();
+    void PlotAll(std::string det="hi");
 
   private:
+    bool fVerbose;
+    bool fHalfHour;    
+
     double f222RnActivity;
     double f222RnMaxActivity;
 
@@ -42,6 +49,6 @@ class Analyzer
     
     Sorter * f222RnSorter;
     Sorter * f40KSorter;
-    Sorter * fCosmicSorter;
+    Sorter * fCosmicSorter[3];
 
 };
