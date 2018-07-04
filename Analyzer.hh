@@ -33,6 +33,8 @@ class Analyzer
 
     void Sort();
     void PlotAll(std::string det="hi");
+    void GenerateBkgd();
+    void DeleteHistograms();
 
   private:
     bool fVerbose;
@@ -50,5 +52,9 @@ class Analyzer
     Sorter * f222RnSorter;
     Sorter * f40KSorter;
     Sorter * fCosmicSorter[3];
+
+    TH1F * fLoLung_bkgd[3];
+    TH1F * fHiLung_bkgd[3];
+    TH1F * fWB_bkgd[3];
 
 };

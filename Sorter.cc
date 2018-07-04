@@ -77,7 +77,7 @@ bool Sorter::Sort(double fraction)
     double dt;
 
     // Loop over all entries in the tree and bin them in the histograms created above
-    for(int i=0; i<nentries-1; i++) {
+    for(int i=0; i<nentries; i++) {
         if(i%1000==0 && fVerbose) std::cout << " " << double(i)/double(nentries)*100. << " % complete   \r";
         
         // Clear all the edep counters

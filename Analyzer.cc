@@ -80,7 +80,7 @@ void Analyzer::PlotAll(std::string det)
     f222RnSorter->GetHistogramRes(det)->Draw();
     
     new TCanvas();
-    f40KSorter->GetHistogramRes(det)->SetTitle(Form("^{222}Rn: %.1fnCi",f40KActivity));
+    f40KSorter->GetHistogramRes(det)->SetTitle(Form("^{40}K: %.1fnCi",f40KActivity));
     f40KSorter->GetHistogramRes(det)->GetXaxis()->SetTitle("Energy [keV]");
     f40KSorter->GetHistogramRes(det)->GetYaxis()->SetTitle("Counts");
     f40KSorter->GetHistogramRes(det)->Draw();
@@ -102,4 +102,72 @@ void Analyzer::PlotAll(std::string det)
     fCosmicSorter[2]->GetHistogramRes(det)->GetXaxis()->SetTitle("Energy [keV]");
     fCosmicSorter[2]->GetHistogramRes(det)->GetYaxis()->SetTitle("Counts");
     fCosmicSorter[2]->GetHistogramRes(det)->Draw();
+
+    if(det=="hi") {
+        for(int i=0; i<3; i++) {
+            fHiLung_bkgd[i]->GetXaxis()->SetTitle("Energy [keV]");
+            fHiLung_bkgd[i]->GetYaxis()->SetTitle("Counts");
+            if(i==0) fHiLung_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Grieder 3.27)",f40KActivity,f222RnActivity,fCosmicActivity));
+            if(i==1) fHiLung_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Grieder 3.28)",f40KActivity,f222RnActivity,fCosmicActivity));
+            if(i==2) fHiLung_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Mei and Hime)",f40KActivity,f222RnActivity,fCosmicActivity));
+            new TCanvas();
+            fHiLung_bkgd[i]->Draw();
+        }
+    }
+    if(det=="lo") {
+        for(int i=0; i<3; i++) {
+            fLoLung_bkgd[i]->GetXaxis()->SetTitle("Energy [keV]");
+            fLoLung_bkgd[i]->GetYaxis()->SetTitle("Counts");
+            if(i==0) fLoLung_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Grieder 3.27)",f40KActivity,f222RnActivity,fCosmicActivity));
+            if(i==1) fLoLung_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Grieder 3.28)",f40KActivity,f222RnActivity,fCosmicActivity));
+            if(i==2) fLoLung_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Mei and Hime)",f40KActivity,f222RnActivity,fCosmicActivity));
+            new TCanvas();
+            fLoLung_bkgd[i]->Draw();
+        }
+    }
+    if(det=="wb") {
+        for(int i=0; i<3; i++) {
+            fWB_bkgd[i]->GetXaxis()->SetTitle("Energy [keV]");
+            fWB_bkgd[i]->GetYaxis()->SetTitle("Counts");
+            if(i==0) fWB_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Grieder 3.27)",f40KActivity,f222RnActivity,fCosmicActivity));
+            if(i==1) fWB_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Grieder 3.28)",f40KActivity,f222RnActivity,fCosmicActivity));
+            if(i==2) fWB_bkgd[i]->SetTitle(Form("Env.Bkgd: %.0fnCi ^{40}K, %.1fpCi/L ^{222}Rn, %.2e/(sr s cm^{2}) cosmic flux (Mei and Hime)",f40KActivity,f222RnActivity,fCosmicActivity));
+            new TCanvas();
+            fWB_bkgd[i]->Draw();
+        }
+    }
+}
+
+void Analyzer::GenerateBkgd()
+{
+    if(fVerbose) {
+        std::cout << " ---> Generating background histograms with the following parameters:" << std::endl;
+        std::cout << " ---> 222Rn: " << f222RnActivity << "pCi/L" << std::endl;
+        std::cout << " ---> 40K: "   << f40KActivity   << "nCi  " << std::endl;
+        std::cout << " ---> Cosmic flux: " << fCosmicActivity << "/(s sr cm2)" << std::endl;
+    }
+    DeleteHistograms();
+    Sort();   
+    for(int i=0; i<3; i++) {
+        fLoLung_bkgd[i] = (TH1F*)f222RnSorter->GetHistogramRes("lo")->Clone("tmp");
+        fLoLung_bkgd[i]->Add(f40KSorter->GetHistogramRes("lo"));
+        fLoLung_bkgd[i]->Add(fCosmicSorter[i]->GetHistogramRes("lo"));
+
+        fHiLung_bkgd[i] = (TH1F*)f222RnSorter->GetHistogramRes("hi")->Clone("tmp");
+        fHiLung_bkgd[i]->Add(f40KSorter->GetHistogramRes("hi"));
+        fHiLung_bkgd[i]->Add(fCosmicSorter[i]->GetHistogramRes("hi"));
+        
+        fWB_bkgd[i] = (TH1F*)f222RnSorter->GetHistogramRes("wb")->Clone("tmp");
+        fWB_bkgd[i]->Add(f40KSorter->GetHistogramRes("wb"));
+        fWB_bkgd[i]->Add(fCosmicSorter[i]->GetHistogramRes("wb"));
+    }
+}
+
+void Analyzer::DeleteHistograms()
+{
+    for(int i=0; i<3; i++) {
+        if(fLoLung_bkgd[i]) delete fLoLung_bkgd[i];
+        if(fHiLung_bkgd[i]) delete fHiLung_bkgd[i];
+        if(fWB_bkgd[i]) delete fWB_bkgd[i];
+    }
 }
