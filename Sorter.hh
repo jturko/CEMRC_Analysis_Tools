@@ -1,4 +1,7 @@
 
+#ifndef SORTER
+#define SORTER 1
+
 #include <string>
 #include <vector>
 
@@ -97,3 +100,5 @@ class Sorter
     double fWB_highbin;
 
 };
+
+#endif

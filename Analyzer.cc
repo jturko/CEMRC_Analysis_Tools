@@ -3,6 +3,8 @@
 #include <fstream>
 
 #include "Analyzer.hh"
+#include "TCanvas.h"
+#include "TH2D.h"
 
 Analyzer::Analyzer(int plate, double radon, double k, double cosmic) :
     fVerbose(true),
@@ -18,22 +20,22 @@ Analyzer::Analyzer(int plate, double radon, double k, double cosmic) :
     f222RnMaxActivity = 4.0; // 4 [pCi/L] 222Rn
     fCosmicMaxActivity = 1e-2;   // 1e-2 [sr-1 s-1 cm-2] cosmic muons
     
-    // Default values for the 238Pu MDA with a 1.6cm CWT
+    // Default values for the 238Pu MDA 
     fMDALowBin = 274;
     fMDAHighBin = 289;
-    fMDAEfficiency = 6.90e-4;
     fMDAIGamma = 5.2e-2;
     fMDATime = 1800.;
-
-    if     (plate == 0) fCWT = 0.00;
-    else if(plate == 1) fCWT = 1.60;
-    else if(plate == 2) fCWT = 2.22;
-    else if(plate == 3) fCWT = 3.01;
-    else if(plate == 4) fCWT = 3.33;
-    else if(plate == 5) fCWT = 4.18;
-    else if(plate == 6) fCWT = 5.10;
-    else if(plate == 7) fCWT = 6.00;
-    else                fCWT = 0.00;
+    
+    // Default values for the 238Pu MDA 
+    if     (plate == 0) { fCWT = 0.00; fMDAEfficiency = 6.12e-3; } 
+    else if(plate == 1) { fCWT = 1.60; fMDAEfficiency = 6.90e-4; }
+    else if(plate == 2) { fCWT = 2.22; fMDAEfficiency = 2.96e-4; }
+    else if(plate == 3) { fCWT = 3.01; fMDAEfficiency = 1.01e-4; }
+    else if(plate == 4) { fCWT = 3.33; fMDAEfficiency = 6.50e-5; }
+    else if(plate == 5) { fCWT = 4.18; fMDAEfficiency = 2.03e-5; }
+    else if(plate == 6) { fCWT = 5.10; fMDAEfficiency = 5.79e-6; }
+    else if(plate == 7) { fCWT = 6.00; fMDAEfficiency = 1.69e-6; }
+    else                { std::cout << " ---> Unknown plate number: " << plate << std::endl; return; }
 
     f222RnSorter =     new Sorter(Form("/home/jturko/CEMRC/Contract1/Simulation_data/CEMRC_bkgd_CWT/CWT_%.2fcm/Rn222_4pCi_CEMRC_bkgd/yesBOMAB/output.root",fCWT));
     f40KSorter =       new Sorter(Form("/home/jturko/CEMRC/Contract1/Simulation_data/CEMRC_bkgd_CWT/CWT_%.2fcm/K40_160nCi_CEMRC_bkgd/output.root",fCWT));
@@ -150,9 +152,9 @@ void Analyzer::PlotAll(std::string det)
 void Analyzer::GenerateBkgd()
 {
     if(fVerbose) {
-        std::cout << " ---> Generating background histograms with the following parameters:";
-        std::cout << "  222Rn: " << f222RnActivity << "pCi/L";
-        std::cout << "\t40K: "   << f40KActivity   << "nCi  ";
+        std::cout << " ---> Generating bkgd. histograms w/ parameters:";
+        std::cout << "\t222Rn: " << f222RnActivity << "pCi/L";
+        std::cout << "\t40K: "   << f40KActivity   << "nCi";
         std::cout << "\tCosmic flux: " << fCosmicActivity << "/(s sr cm2)" << std::endl;
     }
     DeleteHistograms();
@@ -244,5 +246,15 @@ void Analyzer::GenerateMDATable(double cosmic, double radon_low, double radon_hi
         }
     }
     outfile.close();
+
+    for(int i=0; i<3; i++) {
+        fMDAGraph2D[i]->GetHistogram()->GetXaxis()->SetTitle("^{222}Rn Activity [pCi/L]");
+        fMDAGraph2D[i]->GetHistogram()->GetYaxis()->SetTitle("^{40}K Activity [nCi]");
+        fMDAGraph2D[i]->GetHistogram()->GetZaxis()->SetTitle("MDA [nCi]");
+        fMDAGraph2D[i]->GetHistogram()->GetZaxis()->SetTitleOffset(1.2);
+    }
+    fMDAGraph2D[0]->SetTitle(Form("MDA matrix w/ %.2e/[sr s cm2] cosmic rays (Gr.3.27)",fCosmicActivity));
+    fMDAGraph2D[1]->SetTitle(Form("MDA matrix w/ %.2e/[sr s cm2] cosmic rays (Gr.3.28)",fCosmicActivity));
+    fMDAGraph2D[2]->SetTitle(Form("MDA matrix w/ %.2e/[sr s cm2] cosmic rays (Mei & Hime)",fCosmicActivity));
 }
 
