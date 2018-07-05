@@ -141,10 +141,10 @@ void Analyzer::PlotAll(std::string det)
 void Analyzer::GenerateBkgd()
 {
     if(fVerbose) {
-        std::cout << " ---> Generating background histograms with the following parameters:" << std::endl;
-        std::cout << " ---> 222Rn: " << f222RnActivity << "pCi/L" << std::endl;
-        std::cout << " ---> 40K: "   << f40KActivity   << "nCi  " << std::endl;
-        std::cout << " ---> Cosmic flux: " << fCosmicActivity << "/(s sr cm2)" << std::endl;
+        std::cout << " ---> Generating background histograms with the following parameters:";
+        std::cout << "  222Rn: " << f222RnActivity << "pCi/L";
+        std::cout << "\t40K: "   << f40KActivity   << "nCi  ";
+        std::cout << "\tCosmic flux: " << fCosmicActivity << "/(s sr cm2)" << std::endl;
     }
     DeleteHistograms();
     Sort();   
@@ -166,8 +166,24 @@ void Analyzer::GenerateBkgd()
 void Analyzer::DeleteHistograms()
 {
     for(int i=0; i<3; i++) {
-        if(fLoLung_bkgd[i]) delete fLoLung_bkgd[i];
-        if(fHiLung_bkgd[i]) delete fHiLung_bkgd[i];
-        if(fWB_bkgd[i]) delete fWB_bkgd[i];
+        if(fLoLung_bkgd[i]) { delete fLoLung_bkgd[i]; fLoLung_bkgd[i] = NULL; }
+        if(fHiLung_bkgd[i]) { delete fHiLung_bkgd[i]; fHiLung_bkgd[i] = NULL; }
+        if(fWB_bkgd[i]) { delete fWB_bkgd[i]; fWB_bkgd[i] = NULL; }
     }
 }
+
+// Returns the MDA in units of nCi
+const double * Analyzer::CalculateMDA(int lowbin, int highbin, double eff, double I_gamma, double time)
+{   
+    // Loop over all three cosmic ray energy distributions
+    for(int i=0; i<3; i++) {
+        // Calculate the gross counts in the ROI
+        int counts = 0;
+        for(int j=lowbin; j<=highbin; j++) counts += fLoLung_bkgd[i]->GetBinContent(j);
+        fMDA[i] = (4.65*TMath::Sqrt(counts)+3.0)/(eff*time*I_gamma*37.);
+    }
+    return fMDA;
+}
+
+
+

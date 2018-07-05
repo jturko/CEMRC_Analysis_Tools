@@ -10,7 +10,7 @@ Sorter::Sorter(std::string filename) :
     fFileName(filename),
     fRawFile(NULL),
     fTree(NULL),
-    fVerbose(true),
+    fVerbose(false),
     fEdep_vector(NULL),
     fTime_vector(NULL),
     fDetID_vector(NULL)

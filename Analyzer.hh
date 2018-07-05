@@ -36,6 +36,9 @@ class Analyzer
     void GenerateBkgd();
     void DeleteHistograms();
 
+    // Returns the MDA in units of nCi
+    const double * CalculateMDA(int lowbin, int highbin, double eff, double I_gamma, double time);
+
   private:
     bool fVerbose;
     bool fHalfHour;    
@@ -52,9 +55,11 @@ class Analyzer
     Sorter * f222RnSorter;
     Sorter * f40KSorter;
     Sorter * fCosmicSorter[3];
-
+    
     TH1F * fLoLung_bkgd[3];
     TH1F * fHiLung_bkgd[3];
     TH1F * fWB_bkgd[3];
+
+    double fMDA[3];
 
 };
