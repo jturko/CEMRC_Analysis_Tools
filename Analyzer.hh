@@ -1,6 +1,8 @@
 
 #include "Sorter.cc"
 
+#include "TGraph2D.h"
+
 class Analyzer
 {
   public:
@@ -40,6 +42,7 @@ class Analyzer
     const double * CalculateMDA();
     const double * CalculateMDA(int lowbin, int highbin, double eff, double I_gamma, double time);
     void GenerateMDATable(double cosmic=7e-3, double radon_low=0., double radon_high=4., double radon_inc=0.5, double k_low=0., double k_high=160., double k_inc=20.);
+    TGraph2D * GetMDAGraph2D(int i) const { return fMDAGraph2D[i]; }
 
   private:
     bool fVerbose;
@@ -56,11 +59,14 @@ class Analyzer
 
     double fCWT; 
    
+    double fMDA[3];
     int fMDALowBin;
     int fMDAHighBin;
     double fMDAEfficiency;
     double fMDAIGamma;
     double fMDATime;
+
+    TGraph2D * fMDAGraph2D[3];
 
     Sorter * f222RnSorter;
     Sorter * f40KSorter;
@@ -69,7 +75,4 @@ class Analyzer
     TH1F * fLoLung_bkgd[3];
     TH1F * fHiLung_bkgd[3];
     TH1F * fWB_bkgd[3];
-
-    double fMDA[3];
-
 };

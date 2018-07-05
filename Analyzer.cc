@@ -210,6 +210,13 @@ void Analyzer::GenerateMDATable(double cosmic, double radon_low, double radon_hi
     std::cout << " ---> Generating MDA tables for CWT = " << fCWT << "cm" << std::endl;
 
     fCosmicActivity = cosmic;
+    for(int i=0; i<3; i++) {
+        if(fMDAGraph2D[i]) {
+            delete fMDAGraph2D[i];
+            fMDAGraph2D[i] = NULL;
+        }
+        fMDAGraph2D[i] = new TGraph2D();
+    }
 
     std::ofstream outfile;
     outfile.open(Form("MDATable_%.2fcm.csv",fCWT));
@@ -229,10 +236,13 @@ void Analyzer::GenerateMDATable(double cosmic, double radon_low, double radon_hi
         for(double k_iter = k_low; k_iter <= k_high; k_iter+=k_inc) {
             SetActivities(radon_iter,k_iter,fCosmicActivity);
             GenerateBkgd();
-            outfile<<radon_iter<<","<<k_iter<<","<<CalculateMDA()[0]<<","<<CalculateMDA()[1]<<","<<CalculateMDA()[2]<<std::endl;       
+            CalculateMDA();
+            outfile<<radon_iter<<","<<k_iter<<","<<fMDA[0]<<","<<fMDA[1]<<","<<fMDA[2]<<std::endl;       
+            fMDAGraph2D[0]->SetPoint(fMDAGraph2D[0]->GetN(),radon_iter,k_iter,fMDA[0]);
+            fMDAGraph2D[1]->SetPoint(fMDAGraph2D[1]->GetN(),radon_iter,k_iter,fMDA[1]);
+            fMDAGraph2D[2]->SetPoint(fMDAGraph2D[2]->GetN(),radon_iter,k_iter,fMDA[2]);
         }
     }
     outfile.close();
-
 }
 
