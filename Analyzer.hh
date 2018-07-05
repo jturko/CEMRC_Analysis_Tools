@@ -37,7 +37,9 @@ class Analyzer
     void DeleteHistograms();
 
     // Returns the MDA in units of nCi
+    const double * CalculateMDA();
     const double * CalculateMDA(int lowbin, int highbin, double eff, double I_gamma, double time);
+    void GenerateMDATable(double cosmic=7e-3, double radon_low=0., double radon_high=4., double radon_inc=0.5, double k_low=0., double k_high=160., double k_inc=20.);
 
   private:
     bool fVerbose;
@@ -51,7 +53,15 @@ class Analyzer
 
     double fCosmicActivity;
     double fCosmicMaxActivity;
-    
+
+    double fCWT; 
+   
+    int fMDALowBin;
+    int fMDAHighBin;
+    double fMDAEfficiency;
+    double fMDAIGamma;
+    double fMDATime;
+
     Sorter * f222RnSorter;
     Sorter * f40KSorter;
     Sorter * fCosmicSorter[3];

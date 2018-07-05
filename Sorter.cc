@@ -18,7 +18,7 @@ Sorter::Sorter(std::string filename) :
     // Initialize some variables
     fwhm2sigma = 1.0 / ( 2.0*TMath::Sqrt(2.0*TMath::Log(2.)) );
     fTimeWindow = 300; // in nanoseconds
-    fRandom = TRandom3(0);
+    //fRandom = TRandom3(0);
 
     // LoLung binning
     fLoLung_nbins = 4097;

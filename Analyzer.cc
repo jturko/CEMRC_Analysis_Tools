@@ -1,4 +1,7 @@
 
+#include <iostream>
+#include <fstream>
+
 #include "Analyzer.hh"
 
 Analyzer::Analyzer(int plate, double radon, double k, double cosmic) :
@@ -15,22 +18,28 @@ Analyzer::Analyzer(int plate, double radon, double k, double cosmic) :
     f222RnMaxActivity = 4.0; // 4 [pCi/L] 222Rn
     fCosmicMaxActivity = 1e-2;   // 1e-2 [sr-1 s-1 cm-2] cosmic muons
     
-    double cwt;
-    if     (plate == 0) cwt = 0.00;
-    else if(plate == 1) cwt = 1.60;
-    else if(plate == 2) cwt = 2.22;
-    else if(plate == 3) cwt = 3.01;
-    else if(plate == 4) cwt = 3.33;
-    else if(plate == 5) cwt = 4.18;
-    else if(plate == 6) cwt = 5.10;
-    else if(plate == 7) cwt = 6.00;
-    else                cwt = 0.00;
+    // Default values for the 238Pu MDA with a 1.6cm CWT
+    fMDALowBin = 274;
+    fMDAHighBin = 289;
+    fMDAEfficiency = 6.90e-4;
+    fMDAIGamma = 5.2e-2;
+    fMDATime = 1800.;
 
-    f222RnSorter =     new Sorter(Form("/home/jturko/CEMRC/Contract1/Simulation_data/CEMRC_bkgd_CWT/CWT_%.2fcm/Rn222_4pCi_CEMRC_bkgd/yesBOMAB/output.root",cwt));
-    f40KSorter =       new Sorter(Form("/home/jturko/CEMRC/Contract1/Simulation_data/CEMRC_bkgd_CWT/CWT_%.2fcm/K40_160nCi_CEMRC_bkgd/output.root",cwt));
-    fCosmicSorter[0] = new Sorter(Form("/home/jturko/CEMRC/Contract2/simulation_data/CEMRC_cosmic_bkgd/CWT_%.2fcm/CEMRC_flux_Grieder327EnergyDist/output.root",cwt));
-    fCosmicSorter[1] = new Sorter(Form("/home/jturko/CEMRC/Contract2/simulation_data/CEMRC_cosmic_bkgd/CWT_%.2fcm/CEMRC_flux_Grieder328EnergyDist/output.root",cwt));
-    fCosmicSorter[2] = new Sorter(Form("/home/jturko/CEMRC/Contract2/simulation_data/CEMRC_cosmic_bkgd/CWT_%.2fcm/CEMRC_flux_MeiHimeEnergyDist/output.root",cwt));
+    if     (plate == 0) fCWT = 0.00;
+    else if(plate == 1) fCWT = 1.60;
+    else if(plate == 2) fCWT = 2.22;
+    else if(plate == 3) fCWT = 3.01;
+    else if(plate == 4) fCWT = 3.33;
+    else if(plate == 5) fCWT = 4.18;
+    else if(plate == 6) fCWT = 5.10;
+    else if(plate == 7) fCWT = 6.00;
+    else                fCWT = 0.00;
+
+    f222RnSorter =     new Sorter(Form("/home/jturko/CEMRC/Contract1/Simulation_data/CEMRC_bkgd_CWT/CWT_%.2fcm/Rn222_4pCi_CEMRC_bkgd/yesBOMAB/output.root",fCWT));
+    f40KSorter =       new Sorter(Form("/home/jturko/CEMRC/Contract1/Simulation_data/CEMRC_bkgd_CWT/CWT_%.2fcm/K40_160nCi_CEMRC_bkgd/output.root",fCWT));
+    fCosmicSorter[0] = new Sorter(Form("/home/jturko/CEMRC/Contract2/simulation_data/CEMRC_cosmic_bkgd/CWT_%.2fcm/CEMRC_flux_Grieder327EnergyDist/output.root",fCWT));
+    fCosmicSorter[1] = new Sorter(Form("/home/jturko/CEMRC/Contract2/simulation_data/CEMRC_cosmic_bkgd/CWT_%.2fcm/CEMRC_flux_Grieder328EnergyDist/output.root",fCWT));
+    fCosmicSorter[2] = new Sorter(Form("/home/jturko/CEMRC/Contract2/simulation_data/CEMRC_cosmic_bkgd/CWT_%.2fcm/CEMRC_flux_MeiHimeEnergyDist/output.root",fCWT));
 }
 
 Analyzer::~Analyzer() {}
@@ -175,15 +184,55 @@ void Analyzer::DeleteHistograms()
 // Returns the MDA in units of nCi
 const double * Analyzer::CalculateMDA(int lowbin, int highbin, double eff, double I_gamma, double time)
 {   
+    fMDALowBin = lowbin;
+    fMDAHighBin = highbin;
+    fMDAEfficiency = eff;
+    fMDAIGamma = I_gamma;
+    fMDATime = time;
+    
+    return CalculateMDA();
+}
+
+const double * Analyzer::CalculateMDA()
+{
     // Loop over all three cosmic ray energy distributions
     for(int i=0; i<3; i++) {
         // Calculate the gross counts in the ROI
         int counts = 0;
-        for(int j=lowbin; j<=highbin; j++) counts += fLoLung_bkgd[i]->GetBinContent(j);
-        fMDA[i] = (4.65*TMath::Sqrt(counts)+3.0)/(eff*time*I_gamma*37.);
+        for(int j=fMDALowBin; j<=fMDAHighBin; j++) counts += fLoLung_bkgd[i]->GetBinContent(j);
+        fMDA[i] = (4.65*TMath::Sqrt(counts)+3.0)/(fMDAEfficiency*fMDATime*fMDAIGamma*37.);
     }
     return fMDA;
 }
 
+void Analyzer::GenerateMDATable(double cosmic, double radon_low, double radon_high, double radon_inc, double k_low, double k_high, double k_inc)
+{
+    std::cout << " ---> Generating MDA tables for CWT = " << fCWT << "cm" << std::endl;
 
+    fCosmicActivity = cosmic;
+
+    std::ofstream outfile;
+    outfile.open(Form("MDATable_%.2fcm.csv",fCWT));
+    outfile<<"ROI"<<std::endl;
+    outfile<<",Low bin,High bin,N bins"<<std::endl;
+    outfile<<"Peak,"<<fMDALowBin<<","<<fMDAHighBin<<","<<(fMDAHighBin-fMDALowBin+1)<<std::endl;
+    outfile<<std::endl;
+    outfile<<"CWT [cm],"<<fCWT<<std::endl;
+    outfile<<"Efficiency,"<<fMDAEfficiency<<std::endl;
+    outfile<<"I_gamma,"<<fMDAIGamma<<std::endl;
+    outfile<<"Time [s],"<<fMDATime<<std::endl;
+    outfile<<"Cosmic flux [sr-1 s-1 cm-2],"<<fCosmicActivity<<std::endl;
+    outfile<<std::endl;
+
+    outfile<<"Rn-222 [pCi/L] , K-40 [nCi] , MDA [nCi] (w/Gr3.27) , MDA [nCi] (w/Gr3.28) , MDA [nCi] (w/M&H)"<<std::endl;
+    for(double radon_iter = radon_low; radon_iter <= radon_high; radon_iter+=radon_inc) {
+        for(double k_iter = k_low; k_iter <= k_high; k_iter+=k_inc) {
+            SetActivities(radon_iter,k_iter,fCosmicActivity);
+            GenerateBkgd();
+            outfile<<radon_iter<<","<<k_iter<<","<<CalculateMDA()[0]<<","<<CalculateMDA()[1]<<","<<CalculateMDA()[2]<<std::endl;       
+        }
+    }
+    outfile.close();
+
+}
 
